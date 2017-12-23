@@ -13,6 +13,7 @@ contract('Ballot', function(accounts) {
     })
   });
 
+
   it("should be initialized with two proposal", function() {
     var ballot;
     return Ballot.deployed().then(function(instance) {
@@ -27,6 +28,7 @@ contract('Ballot', function(accounts) {
       assert.equal(second, "second proposal", "second proposal should have been created");
     })
   });
+
 
   //modifying the state of the contract
   it("should allow a registered voter to vote on a proposal", function() {
@@ -53,9 +55,10 @@ contract('Ballot', function(accounts) {
       return ballot.voters.call(notAllowedVoter);
     }).then(function(voter) {
       let weight = voter[0].toNumber();
-      assert.equal(weight, 0, 'not allowed voter do not have rights to vote');
+      assert.equal(weight, 0, 'not allowed voter has rights to vote');
     })
   })
+
 
   it("should be able to delegate", function() {
     var ballot;
@@ -72,8 +75,55 @@ contract('Ballot', function(accounts) {
       return ballot.voters.call(delegatee);
     }).then(function(delegatee) {
       return delegatee[0].toNumber();
-      assert.equal(weight, 2, "delegatee shoud have weight");
+      assert.equal(weight, 2, "delegatee shoud have weight equals 2");
     })
-  })
+  });
+
+
+  it("should be able to vote", function() {
+    var ballot;
+    var votesCountBefore;
+    var votesCountAfter;
+    return Ballot.deployed().then(function(instance) {
+      ballot = instance;
+      return ballot.proposals.call(0);
+    }).then(function(firstProposal) {
+      votesCountBefore = firstProposal[1].toNumber();
+      return ballot.vote(0);
+    }).then( function()  {
+      return ballot.proposals.call(0);
+    }).then(function(firstProposal)  {
+      votesCountAfter = firstProposal[1].toNumber();
+      return ballot.voters.call(accounts[0]);
+    }).then(function(voter) {
+      let weight = voter[0];
+      let isVoted = voter[1];
+      let votedProposal = voter[3];
+      let difference = votesCountAfter - votesCountBefore;
+
+      assert.isTrue(isVoted, "The voter didn't vote");
+      assert.equal(votedProposal, 0, "The proposal's indexes didn't match");
+      assert.equal(weight, difference, "The proposal's votes count didn't change");
+    });
+  });
+
+
+ it("should be able to choose winner", function() {
+    var ballot;
+    var winnerIndex = 0;
+    var winnerName = "first proposal";
+    return Ballot.deployed().then(function(instance) {
+      ballot = instance;
+      return ballot.vote(winnerIndex, {from: accounts[1]});
+    }).then(function() {
+      return ballot.winningProposal.call();
+    }).then(function(winningProposal) {
+      assert.equal(winningProposal, winnerIndex, "Winner index must be equal to winning proposal value");
+      return ballot.winnerName.call();
+    }).then(function(proposalName) {
+       winnerProposalName = web3.toUtf8(proposalName);
+      assert.equal(winnerProposalName, winnerName, "Winning proposal name must be equal to first proposal name");
+    });
+  });
 
 });
