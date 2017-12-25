@@ -1,11 +1,16 @@
 module.exports = {
-  // See <http://truffleframework.com/docs/advanced/configuration>
-  // for more about customizing your Truffle configuration!
   networks: {
-    development: {
+    testrpc: {
       host: "localhost",
-      port: 7545,
-      network_id: "*" // Match any network id
+      port: 8545,
+      network_id: "*"
+    },
+    rinkeby: {
+      host: "localhost",
+      port: 8545,
+      from: "0xE6b62f962625eCF490b3152a5E0943fB1717565A",
+      network_id: "4",
+      gas: 4600000
     }
   }
 };

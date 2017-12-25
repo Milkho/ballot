@@ -1,4 +1,4 @@
-var Ballot = artifacts.require("./Ballot.sol");
+var Ballot = artifacts.require("Ballot");
 
 contract('Ballot', function(accounts) {
 
@@ -14,7 +14,7 @@ contract('Ballot', function(accounts) {
   });
 
 
-  it("should be initialized with two proposal", function() {
+  it("should be initialized with two proposals", function() {
     var ballot;
     return Ballot.deployed().then(function(instance) {
       ballot = instance;
@@ -62,19 +62,17 @@ contract('Ballot', function(accounts) {
 
   it("should be able to delegate", function() {
     var ballot;
-    var delegator = accounts[3];
-    var delegatee = accounts[4];
+    var delegator = accounts[0];
+    var delegatee = accounts[3];
     return Ballot.deployed().then(function(instance) {
       ballot = instance;
-      return ballot.giveRightToVote(delegator)
-    }).then(function() {
       return ballot.giveRightToVote(delegatee)
     }).then(function() {
-      return ballot.delegate(delegatee, { from: delegator });
+      return ballot.delegate(delegatee  )
     }).then(function() {
       return ballot.voters.call(delegatee);
     }).then(function(delegatee) {
-      return delegatee[0].toNumber();
+      let weight = delegatee[0].toNumber();
       assert.equal(weight, 2, "delegatee shoud have weight equals 2");
     })
   });
@@ -89,12 +87,12 @@ contract('Ballot', function(accounts) {
       return ballot.proposals.call(0);
     }).then(function(firstProposal) {
       votesCountBefore = firstProposal[1].toNumber();
-      return ballot.vote(0);
+      return ballot.vote(0, {from: accounts[1]});
     }).then( function()  {
       return ballot.proposals.call(0);
     }).then(function(firstProposal)  {
       votesCountAfter = firstProposal[1].toNumber();
-      return ballot.voters.call(accounts[0]);
+      return ballot.voters.call(accounts[1]);
     }).then(function(voter) {
       let weight = voter[0];
       let isVoted = voter[1];
