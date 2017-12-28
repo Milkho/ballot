@@ -1,7 +1,7 @@
-import assertRevert from './helpers/assertRevert';
+import expectThrow from './helpers/expectThrow';
 
 var Ballot = artifacts.require("Ballot");
-
+/*
 contract('Testing of normal work of the "Ballot" contract', accounts => {
 
   //testing contract's constructor
@@ -112,7 +112,7 @@ contract('Testing of normal work of the "Ballot" contract', accounts => {
   });
 
 });   
-
+*/
 //cleaning the contract's state
 contract('Testing of exceptional cases in the work of the "Ballot" contract', accounts => {
 
@@ -121,12 +121,9 @@ contract('Testing of exceptional cases in the work of the "Ballot" contract', ac
     let voter = accounts[1];      
 
     await ballot.giveRightToVote(voter);
-    try {
-      await ballot.giveRightToVote(voter);
-      assert.fail('should have thrown when give right to vote twice');
-    } catch(error) {
-      assertRevert(error);
-    }
+
+    await expectThrow(ballot.giveRightToVote(voter));
+
   });
 
 
@@ -134,12 +131,8 @@ contract('Testing of exceptional cases in the work of the "Ballot" contract', ac
     let ballot = await Ballot.deployed();
     let voter = accounts[1];      
 
-    try {
-      await ballot.vote(100, {from: voter})
-      assert.fail('should have thrown when voter votes for a  proposal with index 100');
-    } catch(error) {
-      assertRevert(error);
-    }
+    await expectThrow(ballot.vote(100, {from: voter}));
+    
   });
 
 
@@ -148,12 +141,8 @@ contract('Testing of exceptional cases in the work of the "Ballot" contract', ac
     let voter = accounts[1];      
 
     await ballot.vote(0, {from: voter})
-    try {
-      await ballot.vote(0, {from: voter})
-      assert.fail('should have thrown when voting twice');
-    } catch(error) {
-      assertRevert(error);
-    }
+    
+    await expectThrow(ballot.vote(0, {from: voter}));
   });
 
 
@@ -163,12 +152,8 @@ contract('Testing of exceptional cases in the work of the "Ballot" contract', ac
     let delegatee = accounts[2];
 
     await ballot.giveRightToVote(delegatee);
-    try {
-      await ballot.delegate(delegatee, {from:delegator});
-      assert.fail('should have thrown when delegating after voting');
-    } catch(error) {
-      assertRevert(error);
-    }
+
+    await expectThrow(ballot.delegate(delegatee, {from:delegator}));
   });
 
 
@@ -176,12 +161,7 @@ contract('Testing of exceptional cases in the work of the "Ballot" contract', ac
     let ballot = await Ballot.deployed();
     let delegator = accounts[2];      
 
-    try {
-      await ballot.delegate(delegator, {from: delegator});
-      assert.fail('should have thrown when delegating to yourself');
-    } catch(error) {
-      assertRevert(error);
-    }
+    await expectThrow(ballot.delegate(delegator, {from: delegator}));
   });
 
 
@@ -191,17 +171,12 @@ contract('Testing of exceptional cases in the work of the "Ballot" contract', ac
     let secondDelegator = accounts[3];      
     let thirdDelegator = accounts[4];      
 
+    await ballot.giveRightToVote(secondDelegator);
     await ballot.giveRightToVote(thirdDelegator);
 
     await ballot.delegate(secondDelegator, {from: firstDelegator});
     await ballot.delegate(thirdDelegator, {from: secondDelegator});
 
-    try {
-      await ballot.delegate(firstDelegator, {from: thirdDelegator})
-      assert.fail('should have thrown when delegating creates a loop');
-    } catch(error) {
-      assertRevert(error);
-    }
+    await expectThrow(ballot.delegate(firstDelegator, {from: thirdDelegator}));
   });
-
 });
