@@ -1,6 +1,8 @@
+import assertRevert from './helpers/assertRevert';
+
 var Ballot = artifacts.require("Ballot");
 
-contract('Ballot', accounts => {
+contract('Testing of normal work of the "Ballot" contract', accounts => {
 
   //testing contract's constructor
   it("should initialize the contract owner as the chairperson", async () => {
@@ -99,7 +101,6 @@ contract('Ballot', accounts => {
     let winnerName = "first proposal";
     let voterAccount = accounts[0];
 
-    await ballot.giveRightToVote(voterAccount);
     await ballot.vote(winnerIndex, {from: voterAccount});
     
     let winningProposal = await ballot.winningProposal.call();
@@ -111,3 +112,96 @@ contract('Ballot', accounts => {
   });
 
 });   
+
+//cleaning the contract's state
+contract('Testing of exceptional cases in the work of the "Ballot" contract', accounts => {
+
+  it("should throw error when give right to vote for person that already have it", async () => {
+    let ballot = await Ballot.deployed();
+    let voter = accounts[1];      
+
+    await ballot.giveRightToVote(voter);
+    try {
+      await ballot.giveRightToVote(voter);
+      assert.fail('should have thrown when give right to vote twice');
+    } catch(error) {
+      assertRevert(error);
+    }
+  });
+
+
+  it("should throw error when voter votes for a non-existent proposal", async () => {
+    let ballot = await Ballot.deployed();
+    let voter = accounts[1];      
+
+    try {
+      await ballot.vote(100, {from: voter})
+      assert.fail('should have thrown when voter votes for a  proposal with index 100');
+    } catch(error) {
+      assertRevert(error);
+    }
+  });
+
+
+  it("should throw error when voter votes twice", async () => {
+    let ballot = await Ballot.deployed();
+    let voter = accounts[1];      
+
+    await ballot.vote(0, {from: voter})
+    try {
+      await ballot.vote(0, {from: voter})
+      assert.fail('should have thrown when voting twice');
+    } catch(error) {
+      assertRevert(error);
+    }
+  });
+
+
+  it("should throw error when voter delegates if he already has voted", async () => {
+    let ballot = await Ballot.deployed();
+    let delegator = accounts[1];      
+    let delegatee = accounts[2];
+
+    await ballot.giveRightToVote(delegatee);
+    try {
+      await ballot.delegate(delegatee, {from:delegator});
+      assert.fail('should have thrown when delegating after voting');
+    } catch(error) {
+      assertRevert(error);
+    }
+  });
+
+
+  it("should throw error when voter delegate to himself directly", async () => {
+    let ballot = await Ballot.deployed();
+    let delegator = accounts[2];      
+
+    try {
+      await ballot.delegate(delegator, {from: delegator});
+      assert.fail('should have thrown when delegating to yourself');
+    } catch(error) {
+      assertRevert(error);
+    }
+  });
+
+
+  it("should throw error when there is a loop in delegation", async () => {
+    let ballot = await Ballot.deployed();
+    let firstDelegator = accounts[2];      
+    let secondDelegator = accounts[3];      
+    let thirdDelegator = accounts[4];      
+
+    await ballot.giveRightToVote(thirdDelegator);
+
+    await ballot.delegate(secondDelegator, {from: firstDelegator});
+    await ballot.delegate(thirdDelegator, {from: secondDelegator});
+
+    try {
+      await ballot.delegate(firstDelegator, {from: thirdDelegator})
+      assert.fail('should have thrown when delegating creates a loop');
+    } catch(error) {
+      assertRevert(error);
+    }
+  });
+
+});

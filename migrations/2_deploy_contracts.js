@@ -6,6 +6,6 @@ module.exports = function(deployer, network, accounts) {
 		deployer.deploy(Ballot, proposals,  {overwrite:false});
 	}
 	else if(network == "rinkeby") {
-		deployer.deploy(Ballot, proposals, {overwrite:false});
+		deployer.deploy(Ballot, proposals);
 	}
 };
