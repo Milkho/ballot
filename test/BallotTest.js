@@ -1,7 +1,7 @@
 import expectThrow from './helpers/expectThrow';
 
 var Ballot = artifacts.require("Ballot");
-/*
+
 contract('Testing of normal work of the "Ballot" contract', accounts => {
 
   //testing contract's constructor
@@ -112,7 +112,7 @@ contract('Testing of normal work of the "Ballot" contract', accounts => {
   });
 
 });   
-*/
+
 //cleaning the contract's state
 contract('Testing of exceptional cases in the work of the "Ballot" contract', accounts => {
 
